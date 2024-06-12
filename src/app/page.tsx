@@ -1,9 +1,12 @@
 'use client';
-import { useReducer } from 'react';
+import { useReducer, useContext } from 'react';
 import { Container, Box, Center, Heading, Button } from '@chakra-ui/react';
 import FormInputField from './components/FormInputField';
 import FormTextareaField from './components/FormTextareaField';
+import Modal from './components/Modal';
 import styles from './page.module.css';
+
+import { ModalContext, ModalEnum } from './context/modalContext';
 
 enum FormFieldEnum {
   flightsNumber = 'flightsNumber',
@@ -26,6 +29,7 @@ type FormAction = {
   field: FormFieldEnum;
   value: string;
 };
+const UPDATE_ACTION = 'update';
 
 const formState: FormState = {
   flightsNumber: { value: '', isError: false },
@@ -83,10 +87,11 @@ const ruleWithName = /^[A-Za-z\s]+$/;
 
 export default function Home() {
   // set up useReducer for form
+  const { openModal } = useContext(ModalContext) || {};
   const [form, dispatch] = useReducer(
     (state: FormState, action: FormAction) => {
       switch (action.type) {
-        case 'update':
+        case UPDATE_ACTION:
           const isValid = validateFormField(action.field, action.value);
           return {
             ...state,
@@ -98,6 +103,14 @@ export default function Home() {
     },
     formState,
   );
+
+  const updateField = (field: FormFieldEnum, value: string) => {
+    dispatch({
+      type: UPDATE_ACTION,
+      field: field,
+      value: value,
+    });
+  };
 
   function validateFormField(label: FormFieldEnum, value: string): boolean {
     switch (label) {
@@ -117,6 +130,9 @@ export default function Home() {
 
   function submitForm() {
     const isValid = Object.values(form).every((field) => !field.isError);
+    if (openModal) {
+      openModal(ModalEnum.Confirm);
+    }
     if (isValid) {
       // submit form
       console.log('submit form', form);
@@ -127,82 +143,73 @@ export default function Home() {
   }
 
   return (
-    <Box p={4} className={styles.heading}>
-      <Container>
-        <Center mb={8}>
-          <Heading as='h4' size='md'>
-            送機行程
+    <>
+      <Box p={4} className={styles.heading}>
+        <Container>
+          <Center mb={8}>
+            <Heading as='h4' size='md'>
+              送機行程
+            </Heading>
+          </Center>
+          <Heading my={4} as='h6' size='sm'>
+            送機計畫
           </Heading>
-        </Center>
-        <Heading my={4} as='h6' size='sm'>
-          送機計畫
-        </Heading>
-        <Box my={4}>
-          <FormInputField
-            isDisabled
-            label='下車機場'
-            inputType='text'
-            inputValue={dropArea}
-            isError={false}
-            onInputChange={() => {}}
-          />
-        </Box>
-        <Box my={4}>
-          <FormInputField
-            label={formInputFileds(form)[0].label}
-            inputType='text'
-            inputValue={form.flightsNumber.value}
-            isError={form.flightsNumber.isError}
-            onInputChange={(e) =>
-              dispatch({
-                type: 'update',
-                field: FormFieldEnum.flightsNumber,
-                value: e.currentTarget.value,
-              })
-            }
-          />
-        </Box>
-        <Heading as='h6' size='sm'>
-          旅客資訊
-        </Heading>
-        {formInputFileds(form)
-          .slice(1, -1)
-          .map((field) => (
-            <Box my={4} key={field.field}>
-              <FormInputField
-                label={field.label}
-                inputType={field.inputType}
-                inputValue={field.inputValue}
-                isError={field.isError}
-                onInputChange={(e) =>
-                  dispatch({
-                    type: 'update',
-                    field: field.field,
-                    value: e.currentTarget.value,
-                  })
-                }
-              />
-            </Box>
-          ))}
-        <Box my={4}>
-          <FormTextareaField
-            label={formInputFileds(form).slice(-1)[0].label}
-            inputValue={form.remark.value}
-            onInputChange={(e) =>
-              dispatch({
-                type: 'update',
-                field: FormFieldEnum.remark,
-                value: e.currentTarget.value,
-              })
-            }
-          />
-        </Box>
-        <Box my={4} onClick={submitForm}>
-          <Button width='100%' colorScheme='blue'>
-            下一步
-          </Button>
-        </Box>
-      </Container>
-    </Box>
+          <Box my={4}>
+            <FormInputField
+              isDisabled
+              label='下車機場'
+              inputType='text'
+              inputValue={dropArea}
+              isError={false}
+              onInputChange={() => {}}
+            />
+          </Box>
+          <Box my={4}>
+            <FormInputField
+              label={formInputFileds(form)[0].label}
+              inputType='text'
+              inputValue={form.flightsNumber.value}
+              isError={form.flightsNumber.isError}
+              onInputChange={(e) =>
+                updateField(FormFieldEnum.flightsNumber, e.currentTarget.value)
+              }
+            />
+          </Box>
+          <Heading as='h6' size='sm'>
+            旅客資訊
+          </Heading>
+          {formInputFileds(form)
+            .slice(1, -1)
+            .map((field) => (
+              <Box my={4} key={field.field}>
+                <FormInputField
+                  label={field.label}
+                  inputType={field.inputType}
+                  inputValue={field.inputValue}
+                  isError={field.isError}
+                  onInputChange={(e) =>
+                    updateField(field.field, e.currentTarget.value)
+                  }
+                />
+              </Box>
+            ))}
+          <Box my={4}>
+            <FormTextareaField
+              label={formInputFileds(form).slice(-1)[0].label}
+              inputValue={form.remark.value}
+              onInputChange={(e) =>
+                updateField(FormFieldEnum.remark, e.currentTarget.value)
+              }
+            />
+          </Box>
+          <Box my={4} onClick={submitForm}>
+            <Button width='100%' colorScheme='blue'>
+              下一步
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+      <Modal />
+    </>
   );
 }
