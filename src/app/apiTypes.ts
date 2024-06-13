@@ -1,0 +1,22 @@
+export type Flight = {
+  "FlightDate": string,
+  "FlightNumber": string,
+  "AirRouteType": number,
+  "AirlineID": string,
+  "DepartureAirportID": string,
+  "ArrivalAirportID": string,
+  "ScheduleDepartureTime": string,
+  "ActualDepartureTime": string,
+  "EstimatedDepartureTime": string,
+  "DepartureRemark": string,
+  "DepartureRemarkEn": string,
+  "Terminal": string,
+  "Gate": string,
+  "Apron": string,
+  "CodeShare": string,
+  "IsCargo": true,
+  "AcType": string,
+  "BaggageClaim": string,
+  "CheckCounter": string,
+  "UpdateTime": string
+}
